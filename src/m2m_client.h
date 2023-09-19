@@ -3,6 +3,7 @@
 #define LWM2MCLIENT_H_
 
 #include "Arduino.h"
+#include "Microfire_SHT3x.h"
 #include "liblwm2m.h"
 
 /*
@@ -92,5 +93,16 @@ lwm2m_object_t *get_security_object(
 // char *get_server_uri(lwm2m_object_t *objectP, uint16_t secObjInstID);
 // void display_security_object(lwm2m_object_t *objectP);
 // void copy_security_object(lwm2m_object_t *objectDest, lwm2m_object_t *objectSrc);
+
+/*
+ * object_temp.c
+ */
+
+lwm2m_object_t *get_object_temp(void);
+lwm2m_object_t *get_object_humi(void);
+void update_temp(lwm2m_context_t *contextP);
+void update_humi(lwm2m_context_t *contextP);
+
+void output_buffer(FILE *stream, const uint8_t *buffer, size_t length, int indent);
 
 #endif /* LWM2MCLIENT_H_ */

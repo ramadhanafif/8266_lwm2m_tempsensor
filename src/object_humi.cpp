@@ -11,17 +11,16 @@
 // Resource Id's:
 #define RES_M_SENSOR_VALUE 5700
 #define RES_O_UNITS        5701
-#define OBJECT_TEMP_UNIT   "Celcius"
+#define OBJECT_humi_UNIT   "Percent"
 
 extern Microfire::SHT3x sht30;
-
-void update_temp(lwm2m_context_t *contextP)
+void update_humi(lwm2m_context_t *contextP)
 {
-    static lwm2m_uri_t uri_temp = { .objectId = 3303, .instanceId = 0, .resourceId = LWM2M_MAX_ID };
-    lwm2m_resource_value_changed(contextP, &uri_temp);
+    static lwm2m_uri_t uri_humi = { .objectId = 3304, .instanceId = 0, .resourceId = LWM2M_MAX_ID };
+    lwm2m_resource_value_changed(contextP, &uri_humi);
 }
 
-static uint8_t prv_temp_read(
+static uint8_t prv_humi_read(
     lwm2m_context_t *contextP,
     uint16_t instanceId,
     int *numDataP,
@@ -57,12 +56,12 @@ static uint8_t prv_temp_read(
     do {
         switch ((*dataArrayP)[i].id) {
         case RES_M_SENSOR_VALUE:
-            // printf("Reading temp, index = %d, dataArray id = %d\n", i, (*dataArrayP)[i].id);
-            lwm2m_data_encode_float(sht30.tempC, *dataArrayP + i);
+            // printf("Reading humi, index = %d, dataArray id = %d\n", i, (*dataArrayP)[i].id);
+            lwm2m_data_encode_float(sht30.RH, *dataArrayP + i);
             result = COAP_205_CONTENT;
             break;
         case RES_O_UNITS:
-            lwm2m_data_encode_string(OBJECT_TEMP_UNIT, *dataArrayP + i);
+            lwm2m_data_encode_string(OBJECT_humi_UNIT, *dataArrayP + i);
             result = COAP_205_CONTENT;
             break;
         }
@@ -73,7 +72,7 @@ static uint8_t prv_temp_read(
     return result;
 }
 
-static uint8_t prv_temp_discover(
+static uint8_t prv_humi_discover(
     lwm2m_context_t *contextP,
     uint16_t instanceId,
     int *numDataP,
@@ -120,7 +119,7 @@ static uint8_t prv_temp_discover(
     return result;
 }
 
-lwm2m_object_t *get_object_temp(void)
+lwm2m_object_t *get_object_humi(void)
 {
     lwm2m_object_t *deviceObj;
 
@@ -132,7 +131,7 @@ lwm2m_object_t *get_object_temp(void)
         deviceObj->versionMajor = 1;
         deviceObj->versionMinor = 1;
 
-        deviceObj->objID        = 3303;
+        deviceObj->objID        = 3304;
         deviceObj->instanceList = (lwm2m_list_t *)lwm2m_malloc(sizeof(lwm2m_list_t));
         if (NULL != deviceObj->instanceList) {
             memset(deviceObj->instanceList, 0, sizeof(lwm2m_list_t));
@@ -146,8 +145,8 @@ lwm2m_object_t *get_object_temp(void)
          * Those function will be called when a read/write/execute query is made by the server. In fact the library
          * don't need to know the resources of the object, only the server does.
          */
-        deviceObj->readFunc     = prv_temp_read;
-        deviceObj->discoverFunc = prv_temp_discover;
+        deviceObj->readFunc     = prv_humi_read;
+        deviceObj->discoverFunc = prv_humi_discover;
         deviceObj->writeFunc    = NULL;
         deviceObj->executeFunc  = NULL;
         deviceObj->userData     = NULL;
