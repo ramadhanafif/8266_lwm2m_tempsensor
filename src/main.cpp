@@ -5,6 +5,10 @@
 #include <cstdint>
 #include <liblwm2m.h>
 
+#include <m2m_client.h>
+
+#include "m2m_server.h"
+
 #include "netstack.hpp"
 
 NetStack net;
@@ -12,10 +16,28 @@ Microfire::SHT3x sht30;
 extern ESP8266WiFiClass WiFi;
 WiFiUDP UDP;
 
-constexpr char srv_address[] = "176.9.24.134";
-constexpr uint16_t srv_port  = 5685;
+constexpr char srv_address[] = M2M_SERVER_IP;
+constexpr uint16_t srv_port  = M2M_PORT;
 
 extern lwm2m_context_t *m2m_init(void);
+
+void get_temp_mC(lwm2m_context_t *m2mH)
+{
+    // take a measurement
+    sht30.measure();
+
+    // display the results
+    switch (sht30.status) {
+    case sht30.STATUS_NOT_CONNECTED:
+    case sht30.STATUS_CRC_ERROR:
+        break;
+
+    case sht30.STATUS_NO_ERROR:
+        update_temp(m2mH);
+        update_humi(m2mH);
+        break;
+    }
+}
 
 void setup()
 {
@@ -39,52 +61,28 @@ void setup()
 
     while (1) {
         time_t step = 10;
+        time_t timeout;
         lwm2m_step(m2mH, &step);
 
-        time_t timeout = millis();
+        if (m2mH->state == STATE_BOOTSTRAP_REQUIRED) {
+            ESP.restart();
+        }
+
+        timeout = millis();
         while (millis() - timeout < 5000) {
             int len = net.recv(buffer, sizeof(buffer));
             if (len > 0) {
-                Serial.print("Packet received: ");
-                Serial.printf("%s\r\n", buffer);
-
+                Serial.println("Received packet:\n");
+                output_buffer(stdout, buffer, len, 1);
                 lwm2m_handle_packet(m2mH, buffer, len, &net);
+                break;
             }
         }
+
+        get_temp_mC(m2mH);
     }
 }
 
 void loop()
-
 {
-    // // take a measurement
-    // sht30.measure();
-    //
-    // // display the results
-    // switch (sht30.status)
-    //
-    // {
-    // case sht30.STATUS_NOT_CONNECTED:
-    //     Serial.println("Error: Sensor not connected");
-    //     break;
-    //
-    // case sht30.STATUS_CRC_ERROR:
-    //     Serial.println("Error: CRC error");
-    //     break;
-    //
-    // case sht30.STATUS_NO_ERROR:
-    //     Serial.println((String)sht30.tempC + " °C");
-    //     Serial.println((String)sht30.tempF + " °F");
-    //     Serial.println((String)sht30.RH + " %RH");
-    //     Serial.println((String)sht30.vpd_kPa + " VPD kPa");
-    //     Serial.println((String)sht30.dew_pointC + " dew point °C");
-    //     Serial.println((String)sht30.dew_pointF + " dew point °F");
-    //     Serial.println((String)sht30.heat_indexC + " heat index °C");
-    //     Serial.println((String)sht30.heat_indexF + " heat index °F");
-    //     Serial.println((String)sht30.wet_bulbC + " wet bulb °C");
-    //     Serial.println((String)sht30.wet_bulbF + " wet bulb °F");
-    //     break;
-    // }
-
-    delay(1000);
 }

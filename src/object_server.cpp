@@ -979,8 +979,8 @@ lwm2m_object_t *get_server_object(int serverId, const char *binding, int lifetim
         serverInstance->initialRegistrationDelayTimer   = -1;
         serverInstance->registrationFailureBlock        = -1;
         serverInstance->bootstrapOnRegistrationFailure  = -1;
-        serverInstance->communicationRetryCount         = -1;
-        serverInstance->communicationRetryTimer         = -1;
+        serverInstance->communicationRetryCount         = 5;
+        serverInstance->communicationRetryTimer         = 2;
         serverInstance->communicationSequenceDelayTimer = -1;
         serverInstance->communicationSequenceRetryCount = -1;
         serverInstance->muteSend                        = false;
